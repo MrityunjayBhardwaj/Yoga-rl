@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Reinforcement Learning using Dynamic Programming</title>
+
+    <script src="../dependency/tensorflowJS/tf.min.js"></script>
+    <script src="../dependency/plotlyJS/plotly-latest.min.js"></script>
+
+    <script src="../dependency/utils.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+
+
+    <style>
+      #blackjackArea {
+        margin: 0 auto;
+      }
+
+      #blackjackArea svg{
+        margin: 0 auto;
+        display: block;
+      }
+
+      .card{
+         box-shadow: 50px 10px;
+      }
+
+      #BJ{
+        display: flex;
+      }
+
+      #BJ div{
+        padding: 10px;
+      }
+
+      #score {
+        margin-top: 0px;
+
+      }
+
+      #score div{
+        width: 120px;
+      }
+
+     
+      #playerAction span{
+        padding: 5px;
+      }
+
+      #playerAction {
+        width: max-content;
+        margin: 0 auto;
+        display: block;
+      }
+
+      #gameStatus {
+        background: aquamarine;
+        border: 5px solid;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: ease;
+        opacity: .0;
+        margin: 0 auto;
+        width: max-content;
+        display: block;
+        margin-top: -200px;
+      }
+
+    </style>
+
+    <link rel="stylesheet" href="../dependency/style/bootstrap-combined.no-icons.min.css" />
+
+    <script src="../dependency/jquery.min.js"></script>
+    <script src="../dependency/bootstrap.min.js"></script>
+
+    <script src="../dependency/d3.js"></script>
+    <script src="../dependency/lodash.js"></script>
+</head>
+<body>
+    <!-- <script src="../Environments/gridWorld.js"></script>
+    <script src="Source/mcWithImportanceSampling.js"></script> -->
+
+
+
+
+
+<div id="wrapper">
+  <div id="game">
+    <div id="alert" class="alert alert-error hide"><span></span></div>
+    <div id="dealer">
+      <div id="dhand"></div>
+    </div>
+    <div id="player">
+      <div id="phand"></div>
+    </div>
+    <div id="money">
+      <span id="cash">Cash: $<span></span></span>
+      <div id="bank">Winnings: $<span></span></div>
+    </div>
+  </div>
+  <div id="actions">
+    <button id="deal" class="btn">Deal!</button>
+    <button id="hit" class="btn" disabled>Hit</button>
+    <button id="stand" class="btn" disabled>Stand</button>
+    <button id="double" class="btn" disabled>Double Down</button>
+    <button id="split" class="btn" disabled>Split</button>
+    <button id="insurance" class="btn" disabled>Insurance</button>
+    <strong>Wager:</strong> $<input id="wager" class="input-small" type="text" />
+  </div>
+</div>
+<div id="myModal" class="modal hide fade">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    <h3>Out of cash!</h3>
+  </div>
+  <div class="modal-body">
+    <p>You ran out of cash, but you spot an ATM nearby. Would you like to withdraw another $1,000 and try your luck again?</p>
+  </div>
+  <div class="modal-footer">
+    <a href="#" id="cancel" class="btn">Nah</a>
+    <a href="#" id="newGame" class="btn btn-primary">Yes!</a>
+  </div>
+</div>
+
+
+<div id="BJ">
+    <div id="score">
+      <div id="dealerScore"> Dealer Score: 5</div>
+      <div id="playerScore">Player Score: 21</div>
+
+    </div>
+  <div>
+    <div id="blackjackArea">
+
+    </div>
+  <div id="outputs">
+      <span id="playerAction">
+        <span id="hitAction">Hit</span>
+        <span id="standAction">Stand</span>
+      </span>
+      <div id="gameStatus"></div>
+    </div>
+  </div>
+
+  
+</div>
+
+
+
+    <div id="a">
+
+      <div id="valueFnViz" style="padding: 2em; display: flex; text-align: center; margin: 0 auto;">
+
+        <div id="valueFnNoAceViz" style="width: 800px; height: 800px; "></div>
+        <div id="valueFnAceViz" style="width: 800px; height: 800px; "></div>
+
+      </div>
+    </div>
+
+    <script src="../dependency/lodash.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.16/lodash.min.js"></script> -->
+    <script src="blackJackGym.js"></script>
+    <script src="blackJack.js"></script>
+
+    <!-- <script src="Source/mcWithImportanceSampling.js"></script> -->
+    <script src="Source/mcViz.js"></script>
+
+</body>
+</html>
