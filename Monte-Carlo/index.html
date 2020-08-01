@@ -69,6 +69,11 @@
         margin-top: -200px;
       }
 
+      #vizContainer{
+        margin: 0 auto;
+        display: block;
+      }
+
     </style>
 
     <link rel="stylesheet" href="../dependency/style/bootstrap-combined.no-icons.min.css" />
@@ -132,7 +137,7 @@
       <div id="playerScore">Player Score: 21</div>
 
     </div>
-  <div>
+  <div id="vizContainer">
     <div id="blackjackArea">
 
     </div>
@@ -145,6 +150,11 @@
     </div>
   </div>
 
+  <div id="controls">
+    <button id="nextStep">NextStep</button>
+    <button id="pausePlay">Pause</button>
+    <button id="restart">Restart</button>
+  </div>
   
 </div>
 
@@ -166,7 +176,11 @@
     <script src="blackJack.js"></script>
 
     <!-- <script src="Source/mcWithImportanceSampling.js"></script> -->
+
+    <script src="Source/monteCarloAlgo.js"></script>
     <script src="Source/mcViz.js"></script>
+
+    <div class="card-1 up" id="pcard-1" style="z-index: 1; top: 360px; right: 352px;"><span class="pos-0 red"><span class="rank">7</span><span class="suit">◆</span></span><span class="pos-1 red"><span class="rank">7</span><span class="suit">◆</span></span></div>
 
 </body>
 </html>
