@@ -1,11 +1,12 @@
 
 // TODO:
-// add episode log on the side
-// style :- score board , (maybe add dealer and player character?) and use the dialog ' hit or stay' when taking action
+// if isPause then don't play the animation just wait for the next key press
 // add backup diagram
 
 // DONE:
 //make the next Step btn workable
+// add episode log on the side
+// style :- score board , (maybe add dealer and player character?) and use the dialog ' hit or stay' when taking action
 
 function breakIntoSubStep(ep,cards){
   // step 1) reset:- has atleast 2 cards then player needs to take more cards untill sum >= 12
@@ -156,7 +157,7 @@ function randomChoice(arr){
 const pausePlayBtn = document.querySelector('#pausePlay');
 const nextStepBtn = document.querySelector('#nextStep');
 const restartBtn = document.querySelector('#restart')
-
+const episodeLog = document.querySelector('#episodeLogList')
 
 nextStepBtn.addEventListener('click', ()=>{
 
@@ -223,6 +224,10 @@ const delayFac = 1;
 
 // card suite symbol code
 const suits = ['\u2660' /* spade */,'\u2665' /* hearts */, '\u2663' /* clubs */, '\u2666' /* diamond */];
+const suitsCol = {'\u2660' : 'black' /* spade */,
+                  '\u2665' : 'red' /* hearts */, 
+                  '\u2663' : 'black'/* clubs */, 
+                  '\u2666' : 'red' /* diamond */}
 
 const margin = { top: 0, right: 30, bottom: 130, left:40 },
     width = 800 - margin.left - margin.right,
@@ -323,41 +328,102 @@ const model = new MC(env, function (ep, fv){
       let cDealerScore = 0;
       let cPlayerScore = 0;
 
+      // data for displaying
       let playerHandData = [];
       let dealerHandData = [];
+
+      let playerHand = [];
+      let dealerHand = [];
 
       const playerSuiteChoice = [];
       const dealerSuiteChoice = [];
 
+      episodeLog.innerHTML = ''
+
+
         /* Main Update Function for each step */
        function update(subStepArray, cStep){
+
+        // resetting
+        document.querySelector('#hitAction').style.backgroundColor = '';
+        document.querySelector('#standAction').style.backgroundColor = '';
+        document.querySelector('#hitAction').style.color = 'black';
+        document.querySelector('#standAction').style.color = 'black';
+
+        // reintializing
+        document.querySelector('#gameStatus').style.opacity = 0.0;
+        document.querySelector('#gameStatus').innerHTML = '';
 
         return new Promise((resolve, rejects)=>{
         console.log('start of the promise')
 
         const cStepObj = subStepArray[cStep];
 
+        // initializing new list element for our episode log
+        const newEntry = document.createElement('li');
         if (cStepObj.state){
 
           const cState = cStepObj.state;
+
+
+          playerHand.push(...cState.playerHand);
+          dealerHand.push(...cState.dealerHand);
+
           // update cards
+          // storing the current state cards to both hands
+          playerHandData.push(...cState.playerHand.map(v=>{ 
 
-
-         playerHandData = cState.playerHand.map(v=>{ if (v ===1)return 'A'; if(v === 10){
-            return randomChoice([10, 'Q', 'J', 'K'])
+           if (v ===1)v = 'A'; 
+           if(v === 10){
+            v = randomChoice([10, 'Q', 'J', 'K']);
           }
-          return v;
+
+          // selecting the suite randomly
+           return v+randomChoice(suits);
         })
+        )
 
-         dealerHandData = cState.dealerHand.map(v=>{ if (v ===1)return 'A'; if(v === 10){
-            return randomChoice([10, 'Q', 'J', 'K'])
-          }
-        return v})
+          dealerHandData.push(...cState.dealerHand.map(v=>{ 
+           if (v ===1)v = 'A'; 
+           if(v === 10){
+              v = randomChoice([10, 'Q', 'J', 'K']);
+            }
+          // selecting the suite randomly
+           return v+randomChoice(suits);
+        }))
 
 
-        console.log('modified CSTATE: ', cState);
+
+        console.log('playerHandData: ', playerHandData, ' dealerHandData', dealerHandData);
           // reselecting all the group tag
           playerCardGrpSelection = playerGroup.selectAll('g');
+
+
+          // logging the state
+
+          if (cStep == 0){
+
+            if (cState.playerHand.length === cState.dealerHand.length){
+              newEntry.innerHTML = `In the beginning, They both draw 2 cards`
+            }else{
+              newEntry.innerHTML = `In the beginning, dealer draw ${cState.dealerHand.length} and  player draw ${cState.playerHand.length} cards because the sum of must be > 12 for player `
+            }
+
+            console.log('inside first new Entry');
+
+          }else{
+            if(cState.playerHand.length){
+              newEntry.innerHTML = `player draw <span style="color: ${suitsCol[playerHandData.slice(-1)[0].slice(-1)]}">${playerHandData.slice(-1)}</span>`
+            }
+
+            if (cState.dealerHand.length){
+              newEntry.innerHTML = `Now, dealer draw <span style="color: ${suitsCol[dealerHandData.slice(-1)[0].slice(-1)]}">  ${dealerHandData.slice(-1)}</span>`
+              // newEntry.innerHTML = `Now, dealer draw style="color: red;">${dealerHandData.slice(-1)}</span>`
+
+            }
+          }
+
+
 
           // creating the player card group which contain all the svg elems of our cards
           const playerCardGrp = playerCardGrpSelection
@@ -389,15 +455,8 @@ const model = new MC(env, function (ep, fv){
             .append('text')
               .attr('x', cardParams.symbolPosTop.x)
               .attr('y', cardParams.height - cardParams.symbolPosTop.y )
-              .text((d,i)=>{
-                playerSuiteChoice.push(Math.floor(Math.random()*4));
-                return `${d}${suits[ playerSuiteChoice.slice(-1)[0] ]}`
-              })
-              .attr('fill',
-               (_,i)=>{
-                  return (playerSuiteChoice[i] % 2 === 0)? 'black' : 'red'
-                }
-              )
+              .text(d=>d)
+              .attr('fill',d=>suitsCol[d.slice(-1)])
 
             // bottom card value
             playerCardGrp
@@ -408,13 +467,8 @@ const model = new MC(env, function (ep, fv){
                  cardParams.symbolPosBottom.x+' '+(cardParams.height - cardParams.symbolPosBottom.y )
                 )
               .style('transform', 'rotate(180deg)')
-              .attr('fill', (d,i)=>{
-                return (playerSuiteChoice[i] % 2 === 0)? 'black' : 'red'
-              }
-              )
-              .text((d,i)=>{
-                return `${d}${suits[ playerSuiteChoice[i] ]}`
-              })
+              .attr('fill', d=>suitsCol[d.slice(-1)])
+              .text(d=>d)
 
 
               // draw card animation
@@ -459,14 +513,8 @@ const model = new MC(env, function (ep, fv){
             .append('text')
               .attr('x', cardParams.symbolPosTop.x)
               .attr('y', cardParams.height - cardParams.symbolPosTop.y )
-              .text((d,_)=>{
-                dealerSuiteChoice.push(Math.floor(Math.random()*4));
-                return `${d}${suits[ dealerSuiteChoice.slice(-1)[0] ]}`
-              })
-              .attr('fill', (_,i)=>{
-                  return (dealerSuiteChoice[i] % 2 === 0)? 'black' : 'red'
-                }
-              )
+              .attr('fill', d=>suitsCol[d.slice(-1)])
+              .text(d=>d)
 
             dealerCardGrp
             .append('text')
@@ -476,13 +524,8 @@ const model = new MC(env, function (ep, fv){
                  cardParams.symbolPosBottom.x+' '+(cardParams.height - cardParams.symbolPosBottom.y )
                 )
               .style('transform', 'rotate(180deg)')
-              .attr('fill', (d,i)=>{
-                  return (dealerSuiteChoice[i] % 2 === 0)? 'black' : 'red'
-                }
-              )
-              .text((d,i)=>{
-                return `${d}${suits[ dealerSuiteChoice[i] ]}`
-              })
+              .attr('fill', d=>suitsCol[d.slice(-1)])
+              .text(d=>d)
 
               // draw card animation
               dealerCardGrp
@@ -499,8 +542,8 @@ const model = new MC(env, function (ep, fv){
 
 
           // updating the score board
-          cPlayerScore += sumHand(cState.playerHand);
-          cDealerScore += sumHand(cState.dealerHand);
+          cPlayerScore = sumHand(playerHand);
+          cDealerScore = sumHand(dealerHand);
           document.querySelector('#playerScore').innerHTML = `Player Score: ${cPlayerScore}`;
           document.querySelector('#dealerScore').innerHTML = `Dealer Score: ${cDealerScore}`;
 
@@ -527,12 +570,20 @@ const model = new MC(env, function (ep, fv){
 
             document.querySelector('#hitAction').style.backgroundColor = 'red';
             document.querySelector('#hitAction').style.color = 'white';
+
+            newEntry.innerHTML = `player Hit`
+
+
           }else{
             // document.querySelector('#playerAction').innerHTML = ':'+'Stand!';
 
             document.querySelector('#standAction').style.backgroundColor = 'red';
             document.querySelector('#standAction').style.color = 'white';
+
+            newEntry.innerHTML = `player has decided to stay`
           }
+
+          if (!isPause){
 
           // for animation
           setTimeout(()=>{
@@ -549,6 +600,13 @@ const model = new MC(env, function (ep, fv){
           }
         , 1000*delayFac);
 
+          }else{
+            console.log('end of the promise from action block',
+            'cStep: '+ cStep);
+            // move to the next step!
+            resolve(restart); 
+
+          }
         }
 
         if(cStepObj.reward != undefined){
@@ -557,20 +615,57 @@ const model = new MC(env, function (ep, fv){
           document.querySelector('#gameStatus').style.opacity = 0.9;
           document.querySelector('#gameStatus').innerHTML = 'Status: '+( (cStepObj.reward === -1)? 'Dealer Wins!' : 'player Wins!');
 
+          if (cStepObj.reward === -1){
+            // cases:- if (cPlayerScore > 21)
+            // if(cPlayerScore < 21 && cDealerScore < 21 ) if(cPlayerScore < cDealerScore)
+
+            if(cPlayerScore > 21){
+              newEntry.innerHTML = `Since, the sum of player's Hand (${cPlayerScore}) is greater then 21. it's Busted! `
+            }else{
+
+              if(cPlayerScore < cDealerScore){
+                newEntry.innerHTML = `Since, the sum of player's Hand (${cPlayerScore}) is smaller then dealer's Hand (${cDealerScore}). it's Busted! `
+              }else{
+                throw new Error('here, cPlayerScore < 21 and return is -1 also, cPlayerScore => cDealerScore... so, in which situation this can happen?')
+              }
+              
+              
+            }
+          }else{
+            if (cPlayerScore > 21){
+              newEntry.innerHTML = `Since, the sum of dealer's Hand (${cDealerScore}) is greater then 21. the dealer is Busted!... Player Won!! `
+            }else{
+
+              newEntry.innerHTML = `Since, the sum of player's Hand (${cPlayerScore}) is greater then dealer's Hand (${cDealerScore}). Player Won!! `
+
+            }
+            // cases:- if(cDealerScore > 21)
+            // if( cPlayerScore < 21 && cDealerScore < 21 ) if( cDealerScore < cPlayerScore )
+          }
+
+
           // animation 
-          setTimeout(()=>{
+          if(!isPause){
 
-            // reintializing
-            document.querySelector('#gameStatus').style.opacity = 0.0;
-            document.querySelector('#gameStatus').innerHTML = '';
+            setTimeout(()=>{
 
-            console.log('end of the promise from reward block', 
-            'cStep: '+ cStep);
-            resolve(restart); 
-          }, 1000*delayFac)
+              // reintializing
+              document.querySelector('#gameStatus').style.opacity = 0.0;
+              document.querySelector('#gameStatus').innerHTML = '';
+
+              console.log('end of the promise from reward block', 
+              'cStep: '+ cStep);
+              resolve(restart); 
+            }, 1000*delayFac)
+          }
+          else{
+            console.log('end of the promise from reward block but the episode is still at pause',
+              'cStep: '+ cStep);
+            resolve(restart);
+          }
         }
 
-
+          episodeLog.appendChild(newEntry);
 
         });
 
@@ -655,7 +750,7 @@ function randomPolicy(){
 
 model.train( nEpoch, behaviorPolicy = randomPolicy());
 
-/* Visualization details:- */
+/* Visualizing the action-value functions:- */
 
 function plotValueFunction(){
 
