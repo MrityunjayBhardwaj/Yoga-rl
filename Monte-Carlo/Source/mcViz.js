@@ -1,3 +1,12 @@
+
+// TODO:
+// add episode log on the side
+// style :- score board , (maybe add dealer and player character?) and use the dialog ' hit or stay' when taking action
+// add backup diagram
+
+// DONE:
+//make the next Step btn workable
+
 function breakIntoSubStep(ep,cards){
   // step 1) reset:- has atleast 2 cards then player needs to take more cards untill sum >= 12
   // step 2 ) playerAction (if hit)
@@ -69,11 +78,6 @@ function breakIntoSubStep(ep,cards){
 
 }
 
-
-
-
-
-
 function breakIntoSteps(ep, cards){
 
   // 1) reset:- has atleast 2 cards then player needs to take more cards untill sum >= 12
@@ -139,22 +143,88 @@ function breakIntoSteps(ep, cards){
 
 }
 
+function randomChoice(arr){
+  const n = arr.length;
+
+  return arr[Math.floor(Math.random()*(n))];
+}
+
+/********************/
+/*  Master Controls */
+/********************/
+
+const pausePlayBtn = document.querySelector('#pausePlay');
+const nextStepBtn = document.querySelector('#nextStep');
+const restartBtn = document.querySelector('#restart')
 
 
+nextStepBtn.addEventListener('click', ()=>{
+
+  // when we click the nextStep Btn for the first time
+  if (!isNextStep){
+   
+    // activate the nextStep 
+    isNextStep =1;
+ 
+    // also, set the pausePlay btn to pause mode.
+
+    if (!isPause){
+      isPause = 1-isPause;
+      pausePlayBtn.innerHTML = (isPause)? 'Play' : 'Pause';
+    }
+  }
+  else{
+
+    // start going to the next step
+    startNextStep = 1;
+  }
+})
+
+function pausePlayCallback(){
+  isPause = 1-isPause;
+  pausePlayBtn.innerHTML = (isPause)? 'Play' : 'Pause';
+
+  if (isNextStep){
+    isNextStep = 0;
+    if(!startNextStep)startNextStep = 1; // because the last startNextStep listener might still be waiting for this flag
+
+  }
+
+  console.log('isPause Changed ', isPause);
+
+}
+pausePlayBtn.addEventListener('click', pausePlayCallback);
+
+restartBtn.addEventListener('click', ()=>{
+  restart = 1;
+
+  // finish all the event listener ( for play/pause and nextStep)
+  if(isPause){
+    isPause = 1-isPause;
+    pausePlayBtn.innerHTML = (isPause)? 'Play' : 'Pause';
+  }
+
+  if(isNextStep){
+    isNextStep = 0;
+    if(!startNextStep)startNextStep = 1; // because the last startNextStep listener might still be waiting for this flag
+  }
+
+
+
+  console.log('restart Button Clicked');
+})
 
 /***************************************************** */
 /*                    VISUALIZATION                    */
 /***************************************************** */
 
-/* controls */
-const pausePlayBtn = document.querySelector('#pausePlay');
-const nextStepBtn = document.querySelector('#nextStepBtn');
-const restartBtn = document.querySelector('#restart')
+const nEpoch = 10;
+const delayFac = 1;
 
 // card suite symbol code
 const suits = ['\u2660' /* spade */,'\u2665' /* hearts */, '\u2663' /* clubs */, '\u2666' /* diamond */];
 
-const margin = {top: 0, right: 30, bottom: 130, left:40},
+const margin = { top: 0, right: 30, bottom: 130, left:40 },
     width = 800 - margin.left - margin.right,
     height = 300 - margin.top - margin.bottom;
 
@@ -192,9 +262,12 @@ const cardParams = {
 }
 
 const dealerOffset = .8;
-const trDueration = 1000;
+const trDueration = 1000*delayFac;
 
 let isPause = 0;
+let isNextStep = 0;
+let startNextStep = 0;
+let restart = 0;
 // let isDone = 1;
 
 function onPausePlay() {
@@ -203,12 +276,12 @@ function onPausePlay() {
 
     const intervalId = setInterval(()=>{
 
-      if (!isPause){
+      if (!isPause || isNextStep){
         clearInterval(intervalId)
         resolve();
       }
 
-    }, 100)
+    }, 500)
 
   })
 }
@@ -246,7 +319,6 @@ const model = new MC(env, function (ep, fv){
       dealerCardGrpSelection.remove();
 
       // updating the scores
-      let cStep = 0;
         
       let cDealerScore = 0;
       let cPlayerScore = 0;
@@ -270,10 +342,20 @@ const model = new MC(env, function (ep, fv){
           const cState = cStepObj.state;
           // update cards
 
-          playerHandData.push(...cState.playerHand)
-          dealerHandData.push(...cState.dealerHand)
+
+         playerHandData = cState.playerHand.map(v=>{ if (v ===1)return 'A'; if(v === 10){
+            return randomChoice([10, 'Q', 'J', 'K'])
+          }
+          return v;
+        })
+
+         dealerHandData = cState.dealerHand.map(v=>{ if (v ===1)return 'A'; if(v === 10){
+            return randomChoice([10, 'Q', 'J', 'K'])
+          }
+        return v})
 
 
+        console.log('modified CSTATE: ', cState);
           // reselecting all the group tag
           playerCardGrpSelection = playerGroup.selectAll('g');
 
@@ -353,7 +435,7 @@ const model = new MC(env, function (ep, fv){
 
           // creating the dealer card group which contain all the svg elems of our cards
           const dealerCardGrp = dealerCardGrpSelection
-          .data(cState.dealerHand)
+          .data(dealerHandData)
           .enter()
             .append('g')
             .merge(dealerCardGrpSelection)
@@ -417,8 +499,8 @@ const model = new MC(env, function (ep, fv){
 
 
           // updating the score board
-          cPlayerScore += _.sum(cState.playerHand);
-          cDealerScore += _.sum(cState.dealerHand);
+          cPlayerScore += sumHand(cState.playerHand);
+          cDealerScore += sumHand(cState.dealerHand);
           document.querySelector('#playerScore').innerHTML = `Player Score: ${cPlayerScore}`;
           document.querySelector('#dealerScore').innerHTML = `Dealer Score: ${cDealerScore}`;
 
@@ -431,9 +513,9 @@ const model = new MC(env, function (ep, fv){
 
             console.log('end of the promise from state block',
             'cStep: '+ cStep);
-            resolve();
+            resolve(restart); 
           
-          },2000)
+          },2000*delayFac)
 
         }
         if(cStepObj.action != undefined){
@@ -463,9 +545,9 @@ const model = new MC(env, function (ep, fv){
             console.log('end of the promise from action block',
             'cStep: '+ cStep);
             // move to the next step!
-            resolve();
+            resolve(restart); 
           }
-        , 1000);
+        , 1000*delayFac);
 
         }
 
@@ -484,8 +566,8 @@ const model = new MC(env, function (ep, fv){
 
             console.log('end of the promise from reward block', 
             'cStep: '+ cStep);
-            resolve();
-          }, 1000)
+            resolve(restart); 
+          }, 1000*delayFac)
         }
 
 
@@ -495,11 +577,18 @@ const model = new MC(env, function (ep, fv){
 
       }
 
-      /* Main episode step loop!  */
-      for(let cStep=0;cStep<subStepArray.length;cStep++){
 
-        console.log('----------------new step------------------', cStep);
-        if (isPause){
+
+      /* Main episode step loop!  */
+      // for(let cStep=0;cStep<subStepArray.length;cStep++){
+
+      let cStep = 0;
+      while(cStep < subStepArray.length){
+
+        console.log('----------------new-step------------------', cStep);
+
+        // if we have paused and haven't clicked on the next step btn
+        if (isPause && !isNextStep){
 
           console.log('inside 1st code block'+ cStep);
           // wait for it to over then update
@@ -513,249 +602,45 @@ const model = new MC(env, function (ep, fv){
           await update(subStepArray, cStep);
 
         }
+
+        if (restart)break;
+
+        if (isNextStep){
+
+          await (()=>{
+
+            return new Promise(resolve=>{
+
+              const intervalId = setInterval(()=>{
+
+                // wait until we click the next step btn
+                if (startNextStep){
+                  clearInterval(intervalId)
+                  resolve();
+                  startNextStep = 0;
+                }
+
+              }, 500)
+
+            })
+          })()
+          cStep++;
+        }else{
+
+          cStep++;
+        }
+
       }
 
 
       console.log('end of the for loop')
       console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
-      resolve();
+      plotValueFunction();
+      resolve(restart);
+      if (restart)
+        model.train( nEpoch, behaviorPolicy = randomPolicy());
+      restart=0;
 
-
-
-      // let stepsIntervalId = setInterval(()=>{
-
-      //   // resetting the action btns
-      //   document.querySelector('#hitAction').style.backgroundColor = '';
-      //   document.querySelector('#standAction').style.backgroundColor = '';
-      //   document.querySelector('#hitAction').style.color = 'black';
-      //   document.querySelector('#standAction').style.color = 'black';
-
-      //   console.log('inside stepInterval');
-
-      //   // updating the score board
-      //   cPlayerScore += _.sum(cState.playerHand);
-      //   cDealerScore += _.sum(cState.dealerHand);
-      //   document.querySelector('#playerScore').innerHTML = `Player Score: ${cPlayerScore}`;
-      //   document.querySelector('#dealerScore').innerHTML = `Dealer Score: ${cDealerScore}`;
-
-      //   // selecting action
-      //   if(cStep > 0){
-
-      //     // cStep -1 because the first step is just drawing that 2 cards (remember?).
-      //     if (ep[cStep-1].action ){
-      //       // document.querySelector('#playerAction').innerHTML = ':'+'Hit!';
-
-      //       document.querySelector('#hitAction').style.backgroundColor = 'red';
-      //       document.querySelector('#hitAction').style.color = 'white';
-      //     }else{
-      //       // document.querySelector('#playerAction').innerHTML = ':'+'Stand!';
-
-      //       document.querySelector('#standAction').style.backgroundColor = 'red';
-      //       document.querySelector('#standAction').style.color = 'white';
-      //     }
-      //   }
-
-      //   const trDueration = 1000;
-
-      // // reselecting all the group tag
-      // playerCardGrpSelection = playerGroup.selectAll('g');
-
-      // // creating the player card group which contain all the svg elems of our cards
-      // const playerCardGrp = playerCardGrpSelection
-      // .data(cState.playerHand)
-      // .enter()
-      //   .append('g')
-      //   .merge(playerCardGrpSelection)
-      //   .attr('class', 'playerCards')
-
-      //   // appending the card shape (rect)
-      //   playerCardGrp
-      //   .append('rect')
-      //     .attr('class', 'card')
-      //     .transition()
-      //     .duration((_,i)=>{ return trDueration/2*(i+1)})
-      //     // .duration(trDueration)
-      //     .attr('x', (_,i)=>{
-      //       return bjScaleX(
-      //         window._.sum(nCardsPerSteps.player.slice(0,cStep))*cardParams.cardGap +i*cardParams.cardGap+1
-      //         ) 
-      //     })
-      //     .attr('y', (_,i)=>{return bjScaleY(0.0) })
-      //     .attr('width', cardParams.width)
-      //     .attr('height', cardParams.height)
-      //     .attr('rx', 5)
-      //     .attr('ry', 5)
-      //     .attr('border')
-      //     .attr('fill', 'red')
-      //     .transition()
-      //     .duration((_,i)=>{ return trDueration/2*(i+1)})
-      //     .attr('fill', 'white');
-
-        
-      //   const playerSuiteChoice = [];
-
-      //   // appending card name to player card group
-      //   playerCardGrp
-      //   .append('text')
-      //     .attr('font-weight', '700')
-      //     .attr('text-anchor', 'end')
-      //     .attr('x', (_,i)=>{
-      //       return bjScaleX(window._.sum(nCardsPerSteps.player.slice(0,cStep))*cardParams.cardGap +i*cardParams.cardGap + 1)  + cardParams.symbolPosTop.x
-      //     })
-      //     .attr('y', (_,i)=>{return  height + cardParams.height - cardParams.symbolPosTop.y })
-      //     .attr('font-size', '16')
-      //     .text((d,i)=>{
-      //       playerSuiteChoice.push(Math.floor(Math.random()*4));
-      //       return `${d}${suits[ playerSuiteChoice.slice(-1)[0] ]}`
-      //     })
-      //     .attr('fill', (d,i)=>{
-      //       return (playerSuiteChoice[i] % 2 === 0)? 'black' : 'red'
-      //     }
-          
-      //     )
-      //     .attr('opacity', 0)
-      //     .transition()
-      //     .duration((_,i)=>{ return trDueration*2*(i+1)})
-      //     .attr('opacity', 1)
-
-      //   playerCardGrp
-      //   .append('text')
-      //     .attr('font-weight', '700')
-      //     .attr('text-anchor', 'end')
-      //     .attr('x', (_,i)=>{
-      //       return bjScaleX(window._.sum(nCardsPerSteps.player.slice(0,cStep))*cardParams.cardGap +i*cardParams.cardGap + 1)  + cardParams.symbolPosBottom.x
-      //     })
-      //     .attr('y', (_,i)=>{return  height + cardParams.height - cardParams.symbolPosBottom.y })
-      //     .attr('transform-origin',
-      //       (d,i) => 
-      //       (bjScaleX(window._.sum(nCardsPerSteps.player.slice(0,cStep))*cardParams.cardGap +i*cardParams.cardGap + 1)  + cardParams.symbolPosBottom.x)
-      //       +' '+
-      //       (height + cardParams.height - cardParams.symbolPosBottom.y )
-      //     )
-
-      //     .style('transform', 'rotate(180deg)')
-      //     .attr('font-size', '16')
-      //     .attr('fill', (d,i)=>{
-      //       return (playerSuiteChoice[i] % 2 === 0)? 'black' : 'red'
-      //     }
-          
-      //     )
-      //     .text((d,i)=>{
-      //       return `${d}${suits[ playerSuiteChoice[i] ]}`
-      //     })
-      //     .attr('opacity', 0)
-      //     .transition()
-      //     .duration((_,i)=>{ return trDueration*2*(i+1)})
-      //     .attr('opacity', 1)
-
-      //     console.log(playerSuiteChoice);
-
-      // const dealerSuiteChoice = [];
-
-      // // reselecting all the group tag
-      // dealerCardGrpSelection = dealerGroup.selectAll('g');
-
-      // // creating the dealer card group which contain all the svg elems of our cards
-      // const dealerCardGrp = dealerCardGrpSelection
-      // .data(cState.dealerHand)
-      // .enter()
-      //   .append('g')
-      //   .merge(dealerCardGrpSelection)
-      //   .attr('class', 'dealerCards')
-
-
-      //   // appending the card shape (rect)
-      //   dealerCardGrp
-      //   .append('rect')
-      //   .attr('class', 'card')
-      //   .transition()
-      //   .duration((_,i)=>{ return trDueration/2*(i+1)})
-      //   .attr('x', (_,i)=>{
-      //     return bjScaleX(window._.sum(nCardsPerSteps.dealer.slice(0,cStep))*cardParams.cardGap +i*cardParams.cardGap + 1)
-      //   })
-      //   .attr('y', (_,i)=>{return bjScaleY(dealerOffset) })
-      //   .attr('width', cardParams.width)
-      //   .attr('height', cardParams.height)
-      //   .attr('rx', 5)
-      //   .attr('ry', 5)
-      //   .attr('fill', 'red')
-      //   .transition()
-      //   .duration((_,i)=>{ return trDueration/2*(i+1)})
-      //   .attr('fill', 'white');
-
-      //   // appending card name to dealer card group
-      //   dealerCardGrp
-      //   .append('text')
-      //     .attr('font-weight', '700')
-      //     .attr('text-anchor', 'end')
-      //     .attr('x', (_,i)=>{
-      //       return bjScaleX(window._.sum(nCardsPerSteps.dealer.slice(0,cStep))*cardParams.cardGap +i*cardParams.cardGap + 1) + cardParams.symbolPosTop.x
-      //     })
-      //     .attr('y', (_,i)=>{return bjScaleY(dealerOffset) + cardParams.height - cardParams.symbolPosTop.y})
-      //     .text((d,i)=>{
-      //       dealerSuiteChoice.push(Math.floor(Math.random()*4));
-      //       return `${d}${suits[ dealerSuiteChoice.slice(-1)[0] ]}`
-      //     })
-      //     .attr('fill', (d,i)=>{
-      //         return (dealerSuiteChoice[i] % 2 === 0)? 'black' : 'red'
-      //       }
-      //     )
-      //     .attr('opacity', 0)
-      //     .transition()
-      //     .duration((_,i)=>{ return trDueration*2*(i+1)})
-      //     .attr('opacity', 1)
-
-      //     const charSize = [0, 0];
-      //   dealerCardGrp
-      //   .append('text')
-      //     .attr('transform-origin',(d,i) => `${bjScaleX(window._.sum(nCardsPerSteps.dealer.slice(0,cStep))*cardParams.cardGap +i*cardParams.cardGap + 1 ) + cardParams.symbolPosBottom.x - charSize[0]} ${bjScaleY(dealerOffset ) + cardParams.height - cardParams.symbolPosBottom.y - charSize[1]}`)
-      //     .style('rotate', '180deg')
-      //     .attr('font-weight', '700')
-      //     .attr('text-anchor', 'end')
-      //     .attr('x', (_,i)=>{
-      //       return bjScaleX(window._.sum(nCardsPerSteps.dealer.slice(0,cStep))*cardParams.cardGap +i*cardParams.cardGap + 1) + cardParams.symbolPosBottom.x
-      //     })
-      //     .attr('y', (_,i)=>{return bjScaleY(dealerOffset) + cardParams.height - cardParams.symbolPosBottom.y})
-      //     .text((d,i)=>{
-      //       return `${d}${suits[ dealerSuiteChoice[i] ]}`
-      //     })
-      //     .attr('fill', (d,i)=>{
-      //         return (dealerSuiteChoice[i] % 2 === 0)? 'black' : 'red'
-      //       }
-      //     )
-      //     .attr('opacity', 0)
-      //     .transition()
-      //     .duration((_,i)=>{ return trDueration*2*(i+1)})
-      //     .attr('opacity', 1)
-
-
-
-      //     // termination condition
-      //       cStep++;
-
-      //       if (cStep >= stepsArray.length ){
-
-      //         document.querySelector('#gameStatus').style.opacity = 0.9;
-      //         document.querySelector('#gameStatus').innerHTML = 'Status: '+( (ep[ep.length-1].reward === -1)? 'Dealer Wins!' : 'player Wins!');
-
-      //         setTimeout(()=>{
-      //           document.querySelector('#hitAction').style.backgroundColor = '';
-      //           document.querySelector('#standAction').style.backgroundColor = '';
-      //           document.querySelector('#hitAction').style.color = 'black';
-      //           document.querySelector('#standAction').style.color = 'black';
-
-      //           // reset
-      //           document.querySelector('#gameStatus').style.opacity = 0.0;
-      //           resolve()
-              
-      //         }, 5000)
-
-      //         clearInterval(stepsIntervalId)
-      //       }
-
-      //     }, 4000)
-
-      
   })
 
 
@@ -767,7 +652,8 @@ function randomPolicy(){
     return A;
   }
 }
-model.train( 10, behaviorPolicy = randomPolicy());
+
+model.train( nEpoch, behaviorPolicy = randomPolicy());
 
 /* Visualization details:- */
 
@@ -833,7 +719,7 @@ function plotValueFunction(){
     x: xRange,
     y : yRange,
     z : a,
-    type: 'surface',
+    type: 'contour',
 
     colorscale : [[0, darkModeCols.blue()], [0.25, darkModeCols.purple()],[0.5, darkModeCols.magenta()], [.75, darkModeCols.yellow()], [1, darkModeCols.red()]],
   }];
@@ -842,7 +728,7 @@ function plotValueFunction(){
     x: xRange,
     y : yRange,
     z : b,
-    type: 'surface',
+    type: 'contour',
 
     colorscale : [[0, darkModeCols.blue()], [0.25, darkModeCols.purple()],[0.5, darkModeCols.magenta()], [.75, darkModeCols.yellow()], [1, darkModeCols.red()]],
 
@@ -878,24 +764,7 @@ function plotValueFunction(){
 
 
 
-
-
-
-
 /* Controls */
-
-
 
 // register if currt btn is pause or play
 let cBtnStatus = 0;
-
-pausePlayBtn.addEventListener('click', pausePlayCallback);
-
-
-function pausePlayCallback(){
-  isPause = 1-isPause;
-  pausePlayBtn.innerHTML = (isPause)? 'Play' : 'Pause';
-
-  console.log('isPause Changed ', isPause);
-
-}
