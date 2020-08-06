@@ -13,6 +13,7 @@
 
     <link rel="stylesheet" type="text/css" href="style.css"/>
 
+  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500|Material+Icons" rel="stylesheet" type="text/css">
 
     <style>
       #blackjackArea {
@@ -28,24 +29,7 @@
          box-shadow: 50px 10px;
       }
 
-      #BJ{
-        display: flex;
-      }
 
-      #BJ div{
-        padding: 10px;
-      }
-
-      #score {
-        margin-top: 0px;
-
-      }
-
-      #score div{
-        width: 120px;
-      }
-
-     
       #playerAction span{
         padding: 5px;
       }
@@ -130,13 +114,28 @@
   </div>
 </div>
 
+<div id="mainContainer">
 
+<div id="controls">
+  <button id="restart">&#x21ba;</button>
+  <button id="pausePlay">&#x25b6; </button>
+  <button id="nextStep">&#x23e9;</button>
+</div>
 <div id="BJ">
+  <div id="left-panel">
+
     <div id="score">
       <div id="dealerScore"> Dealer Score: 5</div>
       <div id="playerScore">Player Score: 21</div>
 
     </div>
+    <div id="episodeLog" style="width: 200px">
+      <h3 style="text-decoration: underline; text-decoration-skip-ink: none; text-align: left;">Episode #<span id="episodeNumber">3</span> Logs</h3>
+      
+      <ul id="episodeLogList">
+      </ul>
+    </div>
+  </div>
   <div id="vizContainer">
     <div id="blackjackArea">
 
@@ -150,25 +149,23 @@
     </div>
   </div>
 
-  <div id="controls">
-    <button id="nextStep">NextStep</button>
-    <button id="pausePlay">Pause</button>
-    <button id="restart">Restart</button>
-  </div>
   
 </div>
 
+<hr>
+    <div id="valueFnContainer">
+      <h2>Plots</h2>
 
+      <p >Lorem ipsum dolor sit amet consectetur adipisicing elit. Adipisci cupiditate fuga nostrum facere nisi, eius perferendis culpa ullam ducimus nemo sit sint at soluta eos natus sapiente maiores? Tempora, beatae!</p>
+      <div id="valueFnViz" >
 
-    <div id="a">
-
-      <div id="valueFnViz" style="padding: 2em; display: flex; text-align: center; margin: 0 auto;">
-
-        <div id="valueFnNoAceViz" style="width: 800px; height: 800px; "></div>
-        <div id="valueFnAceViz" style="width: 800px; height: 800px; "></div>
+        <div id="valueFnNoAceViz" style="width: 500px; height: 500px; "></div>
+        <div id="valueFnAceViz" style="width: 500px; height: 500px; "></div>
 
       </div>
     </div>
+
+</div>
 
     <script src="../dependency/lodash.js"></script>
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.16/lodash.min.js"></script> -->
