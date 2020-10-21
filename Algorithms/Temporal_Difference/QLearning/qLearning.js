@@ -1,15 +1,3 @@
-// TODO:
-
-// Suggestions: 
-
-// DONE: 
-// check if we really got the qValues < 0 
-// ==> yes!
-// is it behaviour or behavior? 
-// ==> its behavior
-// should i change maxEpisodes to nEpisodes? 
-// ==> yes!
-
 class QLearning{
     constructor(env, params, callback){
 

@@ -1,7 +1,3 @@
-// TODO:
-// use default dict instead <--- No! bcuz since we already know nStates and nActions we don't need default dict.
-// TEST IT!
-
 class policyIteration{
   constructor(env, params, callback){
 

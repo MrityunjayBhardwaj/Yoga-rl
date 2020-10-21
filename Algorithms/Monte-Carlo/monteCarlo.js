@@ -1,12 +1,3 @@
-// TODO: 
-// Do we really need getQValues function? == yes! for asthetical typing reasons. :P
-
-// DONE:
-// For MC, added the argument for adding arbitrary policy function 
-// convert the name of DefaultDict to defaultDict in this file and all of the other files that uses it.
-// use importance sampling ratio instead of weight cum sum.
-// and make sure to use the defaultGetValue feature instead of if/else statements while querying entries that doesn't exist yet.
-
 class MonteCarlo {
 
   constructor(env, params, callback) {
