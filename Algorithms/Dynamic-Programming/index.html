@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Programming</title>
+
+    <script src="../../Dependencies/lodash.js"></script>
+    <script src="../../Dependencies/Utils.js"></script>
+
+    <script src="../../Environments/gridWorldDP.js"></script>
+    <script src="./policyIteration.js"></script>
+
+</head>
+<body>
+
+ <script>
+
+
+    const gridSize = 5;
+    let env = new gridWorldEnv_v2([gridSize, gridSize]);
+
+    // init our policy Iteriation Model
+    let model = new policyIteration(
+    env,
+    {   discountFactor: 1.0, 
+        theta: 0.00001 
+    }, 
+    );
+
+    // run the policy iteration algorithm
+    model.run([100, 100]);
+ </script>
+
+    
+</body>
+</html>
