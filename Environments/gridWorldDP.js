@@ -1,12 +1,14 @@
-
+import {DiscreteEnv} from './discrete.js'
 // Inspired by Frozen Lake Env : https://github.com/openai/gym/blob/master/gym/envs/toy_text/frozen_lake.py
 
-class gridWorldEnv_v2{
-  constructor(gridShape = [5, 5], isWallState, isTerminalState, rewardFn){
+export class GridWorldEnv extends DiscreteEnv{
+  constructor(gridShape = [5, 5], isWallState, isTerminalState, rewardFn, startStateFn){
 
     const _isTerminalState = isTerminalState ?? _defaultIsTerminalState.bind(this);
     const _isWallState = isWallState ?? _defaultIsWallState;
     const _rewardFn = rewardFn ?? _defaultRewardFn;
+    const _initStartState = startStateFn ?? (()=>3);
+
     const _gridShape = gridShape;
     this.nS = _gridShape[0]* _gridShape[1];
     this.nA = 4;
@@ -81,22 +83,28 @@ class gridWorldEnv_v2{
 
           nextStateIndex =  ( _isEdge(s, dir, actions) || _isWallState(nextStateIndex) || _isTerminalState(s) )? s : nextStateIndex;
 
-          properties.push( {
-            probability: 1.0,
-            // if the given state, action pair yield a wall state or is on the edge or is a terminal state then don't change the state at all.
-            nextStateIndex: nextStateIndex,
-            reward: _rewardFn(s, dir, nextStateIndex),
-            isDone: +_isTerminalState(s)
-          })
+          properties.push(
+            [
+              {
+                probability: 1.0,
+                // if the given state, action pair yield a wall state or is on the edge or is a terminal state then don't change the state at all.
+                nextState: nextStateIndex,
+                reward: _rewardFn(s, dir, nextStateIndex),
+                isDone: +_isTerminalState(s)
+              }
+            ]
+          )
       }
 
       return properties;
     }
 
+    // calculate initial state distribution
+    const _isd = Array(this.nS).fill(0)
+    _isd[_initStartState()] = 1.0
+
+    super(this.nS,this.nA,this.P, _isd)
   }
-
- 
-
   render(){
 
   }
