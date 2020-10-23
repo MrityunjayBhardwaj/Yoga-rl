@@ -1,4 +1,4 @@
-import { GridWorldEnv } from '../../Environments/gridWorldDP'
+import { GridWorldEnv } from '../../Environments/gridWorld'
 import { policyIteration } from "./policyIteration";
 
 
