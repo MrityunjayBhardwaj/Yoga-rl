@@ -1,14 +1,17 @@
-class Sarsa{
+import { cloneDeep, fill } from 'lodash'
+import { indexFromDistribution, DefaultDict } from '../../../Dependencies/Utils';
+
+export class Sarsa{
     constructor(env, params, callback){
 
         const _model = {
-            qValues: new DefaultDict(_.fill(Array(env.nA),0)),
+            qValues: new DefaultDict(fill(Array(env.nA),0)),
         }
         const _discountFactor = params.discountFactor ?? 1.0;
         const _learningRate = params.learningRate ?? 0.5;
 
         this.callback = callback || (()=>{});
-        this.getQValues = ()=>_.cloneDeep(_model.qValues);
+        this.getQValues = ()=>cloneDeep(_model.qValues);
         this.saveModel = ()=>JSON.stringify(_model);
 
         /**

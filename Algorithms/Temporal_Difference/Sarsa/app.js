@@ -1,3 +1,6 @@
+import { policyFnFactory } from "../../../Dependencies/Utils";
+import { BlackJackEnv } from "../../../Environments/blackJack";
+
 // environment to test our models on.
 const env = new BlackJackEnv();
 

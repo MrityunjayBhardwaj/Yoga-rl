@@ -1,5 +1,9 @@
+import { GridWorldEnv } from '../../Environments/gridWorldDP'
+import { policyIteration } from "./policyIteration";
+
+
 const gridSize = 5;
-let env = new gridWorldEnv_v2([gridSize, gridSize]);
+let env = new GridWorldEnv([gridSize, gridSize]);
 
 // init our policy Iteriation Model
 let model = new policyIteration(

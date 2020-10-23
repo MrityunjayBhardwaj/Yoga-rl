@@ -1,8 +1,11 @@
-class QLearning{
+import { cloneDeep, fill } from 'lodash'
+import { indexFromDistribution, argMax, DefaultDict } from '../../../Dependencies/Utils';
+
+export class QLearning{
     constructor(env, params, callback){
 
         const _model = {
-            qValues: new DefaultDict(_.fill(Array(env.nA),0)),
+            qValues: new DefaultDict(fill(Array(env.nA),0)),
         }
         const _discountFactor = params.discountFactor ?? 1.0;
         const _learningRate = params.learningRate ?? 0.5;
@@ -11,14 +14,14 @@ class QLearning{
         function _greedyPolicyFn(state){
 
             const qValues = _model.qValues;
-            const policy = _.fill(Array(env.nA), 0);
+            const policy = fill(Array(env.nA), 0);
             const greedyAction = argMax(qValues.get(state))
             policy[greedyAction] = 1.0;
             return policy;
         };
 
         this.callback = callback || (()=>{});
-        this.getQValues = ()=>_.cloneDeep(_model.qValues);
+        this.getQValues = ()=>cloneDeep(_model.qValues);
         this.save = ()=>JSON.stringify(_model);
 
         /**

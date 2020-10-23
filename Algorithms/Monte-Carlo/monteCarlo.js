@@ -1,9 +1,12 @@
-class MonteCarlo {
+import { cloneDeep, fill } from 'lodash'
+import { indexFromDistribution, argMax, DefaultDict } from '../../Dependencies/Utils';
+
+export class MonteCarlo {
 
   constructor(env, params, callback) {
     const _model = {
-        qValues: new DefaultDict(_.fill(Array(env.nA), 0)),
-        weightsCumSum : new DefaultDict(_.fill(Array(env.nA), 0)),
+        qValues: new DefaultDict(fill(Array(env.nA), 0)),
+        weightsCumSum : new DefaultDict(fill(Array(env.nA), 0)),
     }
     const _discountFactor = params.discountFactor;
     const _targetPolicy = _greedyPolicyFn;
@@ -11,7 +14,7 @@ class MonteCarlo {
     function _greedyPolicyFn(state){
 
       const qValues = _model.qValues;
-      const policy = _.fill(Array(env.nA), 0);
+      const policy = fill(Array(env.nA), 0);
       const greedyAction = argMax(qValues.get(state))
       policy[greedyAction] = 1.0;
       return policy;
@@ -86,7 +89,7 @@ class MonteCarlo {
     }
 
     this.callback = callback ?? (()=>{})
-    this.getQValues = ()=>_.cloneDeep(_model.qValues);
+    this.getQValues = ()=>cloneDeep(_model.qValues);
     this.save = ()=>JSON.stringify(_model);
 
     /**

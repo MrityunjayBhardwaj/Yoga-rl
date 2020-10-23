@@ -1,4 +1,6 @@
-class policyIteration{
+import { cloneDeep } from 'lodash'
+
+export class policyIteration{
   constructor(env, params, callback){
 
     const _nActions = env.nA;
@@ -50,8 +52,8 @@ class policyIteration{
     }
 
 
-    this.getPolicy = ()=>_.cloneDeep(_model.policy);
-    this.getValueFns = ()=>_.cloneDeep(_model.valueFns);
+    this.getPolicy = ()=>cloneDeep(_model.policy);
+    this.getValueFns = ()=>cloneDeep(_model.valueFns);
     this.save = ()=>JSON.stringify(_model);
 
     this.policyEvaluation = function (policy, env, discountFactor, theta, nEpisodes, callback){ 
