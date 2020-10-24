@@ -1,6 +1,6 @@
-// TODO: convert indexFromDistribution to samplingFromDistribution which take 2 args just like np.random.choice.
+import { cloneDeep, zip, unzip, range, sortBy, sum } from 'lodash'
 
-function argMax(arr){
+export function argMax(arr){
 
   // if(typeof arr !== 'Array')throw new Error('input must be of type array but given of type '+(typeof arr));
   const maxVal = Math.max(...arr);
@@ -37,7 +37,7 @@ function argMax(arr){
     const coords = index2Coords(index, tensorShape, tensorSize );
     console.log(coords); // > [0, 1, 2]
  */
-function index2Coords(index, shape, size){
+export function index2Coords(index, shape, size){
 
     size = size || shape.reduce((accumulator,currentValue)=> accumulator*currentValue, 1);
 
@@ -63,10 +63,10 @@ function index2Coords(index, shape, size){
  * @example 
  * const a = [0.1, 0.3, 0.5]
  */
-function indexFromDistribution(distribution){
+export function indexFromDistribution(distribution){
   if (Math.max(distribution) === NaN)throw new Error('distribution must be an array whose entries must only be of type \'Number\'. ');
 
-  const sumOfDist = _.sum(distribution);
+  const sumOfDist = sum(distribution);
 
 
   // normalize the distribution
@@ -74,10 +74,10 @@ function indexFromDistribution(distribution){
     distribution = distribution.map((val)=>{ return val/sumOfDist });
 
   const randNum = Math.random();
-  const zipDistAndIndexes = _.zip(distribution, _.range(distribution.length));
-  const sortedDistAndIndexes = _.sortBy(zipDistAndIndexes, [0]);
-  const [sortedDist, sortedIndexes ] = _.unzip(sortedDistAndIndexes);
-  const cumDist = sortedDist.map((prob,i)=>_.sum(sortedDist.slice(0, i+1)));
+  const zipDistAndIndexes = zip(distribution, range(distribution.length));
+  const sortedDistAndIndexes = sortBy(zipDistAndIndexes, [0]);
+  const [sortedDist, sortedIndexes ] = unzip(sortedDistAndIndexes);
+  const cumDist = sortedDist.map((prob,i)=>sum(sortedDist.slice(0, i+1)));
   const indexOfNearestCumProbFromRandNum = ( cumDist.map((prob)=>{return 1*((prob-randNum) > 0)}) ).indexOf(1);
   const sampledIndexFromDist = sortedIndexes.indexOf(indexOfNearestCumProbFromRandNum);
   
@@ -85,7 +85,7 @@ function indexFromDistribution(distribution){
 
 }
 
-class DefaultDict{
+export class DefaultDict{
 
   /**
    * 
@@ -142,7 +142,7 @@ class DefaultDict{
       const stringifyKey = JSON.stringify(key);
       const idx = Key.indexOf(stringifyKey);
 
-      return _.cloneDeep((idx !== -1)? Value[idx] : defaultGetValue);
+      return cloneDeep((idx !== -1)? Value[idx] : defaultGetValue);
     }
 
     /**
@@ -185,7 +185,7 @@ class DefaultDict{
      * @returns entire dictonary as a 2d-array.
      */
     this.items = ()=>{
-      return _.zip(Key.map(
+      return zip(Key.map(
         k => 
         JSON.parse(k)
         ), Value);
@@ -203,7 +203,7 @@ class DefaultDict{
  * the full list of available poliyFns are:
  * ["epsilonGreedy", "UCB"]
  */
-function policyFnFactory(policyFnName, env, params){
+export function policyFnFactory(policyFnName, env, params){
   const nActions = env.nA;
 
   const policyFnNames = ['random', 'greedy', 'epsilonGreedy', 'UCB', ];

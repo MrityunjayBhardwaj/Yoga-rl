@@ -1,9 +1,4 @@
-// TODO for yoga lib: 
-// try to find a way to generalize the render function with different tech like canvas, webgl, svg etc.
-// Create a render method which do everything that you are doing in the mc-viz.js.
-
-
-
+import { sum, sortBy } from 'lodash';
 
 function cmp(a, b){
     return ( a > b)*1 - (a < b)*1
@@ -38,7 +33,7 @@ function drawCard(drawHand = false){
  */
 function usableAce(hand){
     // console.log(hand);
-    return (hand.indexOf(1) !== -1) && ((_.sum(hand) + 10) <= 21)
+    return (hand.indexOf(1) !== -1) && ((sum(hand) + 10) <= 21)
 }
 
 /**
@@ -47,7 +42,7 @@ function usableAce(hand){
  * @return {number}
  */
 function sumHand(hand){
-    return _.sum(hand) + (usableAce(hand))*10;
+    return sum(hand) + (usableAce(hand))*10;
 }
 
 /**
@@ -74,10 +69,10 @@ function score(hand){
  * @return {boolean}
  */
 function isNatural(hand){
-    return _.sortBy(hand) === [1, 10];
+    return sortBy(hand) === [1, 10];
 }
 
-class BlackJackEnv{
+export class BlackJackEnv{
     constructor (nautral = false) {
         this.player = [];
         this.dealer = [];
