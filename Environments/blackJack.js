@@ -1,4 +1,5 @@
 import { sum, sortBy } from 'lodash';
+import { Env } from './core';
 
 function cmp(a, b){
     return ( a > b)*1 - (a < b)*1
@@ -72,8 +73,9 @@ function isNatural(hand){
     return sortBy(hand) === [1, 10];
 }
 
-export class BlackJackEnv{
+export class BlackJackEnv extends Env {
     constructor (nautral = false) {
+        super();
         this.player = [];
         this.dealer = [];
         this.nA = 2;
@@ -119,14 +121,10 @@ export class BlackJackEnv{
                 reward = 1.5;
 
         }
-            return { observation: this._getObs(), reward, isDone, cardUsed: {dealer: this.dealer, player: this.player} }
+            return {nextState: this._getObs(), reward, isDone, cardUsed: {dealer: this.dealer, player: this.player} }
 
     }
     
-    render(){
-
-    }
-
     _getObs(){
         return { playerScore: sumHand(this.player), dealerScore: this.dealer[0], usableAce: usableAce(this.player) }
     }
