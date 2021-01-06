@@ -1,4 +1,5 @@
 import {Env} from './core.js'
+import {sampleFromDistribution} from '../Dependencies/Utils'
 export class DiscreteEnv extends Env{
     /**
      * 
@@ -8,33 +9,29 @@ export class DiscreteEnv extends Env{
      * @param {array} initStateDist probability distribution of states used for initialization
      */
     constructor(nS,nA,P, initStateDist){
+        super()
         this.P = P;
         this.initStateDist = initStateDist;
         this.lastAction = null;
         this.nS = nS;
         this.nA = nA;
-
-        // sampling random state
-        this.s = indexFromDistribution(initStateDist);
     }
     reset(){
         // sampling random state
-        this.s = indexFromDistribution(this.initStateDist);
+        this.s = sampleFromDistribution(this.initStateDist);
         this.lastAction = null;
-        return this.s;
+        return {id: this.s};
     }
     step(action){
-        let transtionStates = this.P[this.s][action];
-        if (!transtionStates.length)throw new Error("P[s][a] must be an array of atleast length 1 but given", transtionStates)
-
-        const transtionProbs = transtions.map((a)=>a.probability)
-        const sampleAction = indexFromDistribution(transtionProbs);
+        let transitionStates = this.P[this.s][action];
+        if (!transitionStates.length)throw new Error("P[s][a] must be an array of atleast length 1 but given", transtionStates);
+        const transitionProbs = transitionStates.map((a)=>a.probability);
+        const sampleAction = sampleFromDistribution(transitionProbs);
         let {nextState, reward, isDone, probability} = transitionStates[sampleAction];
 
-        this.s = nextState;
+        this.s = nextState.id;
         this.lastAction = sampleAction;
 
         return {nextState, reward, isDone, probability};
-
     }
 }
