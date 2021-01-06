@@ -6,7 +6,7 @@ export class Env{
     reset(){throw new Error("this method is not yet Implemented")}
 
     /**
-     * @param {object} action action performed by the agent
+     * @param {number} action action performed by the agent must be between 0 and nA.
      * @summary run 1 timestep of the environment.
      * @returns {stepObj}
      */
