@@ -1,76 +1,101 @@
-import { cloneDeep, fill } from 'lodash'
-import { indexFromDistribution, argMax, DefaultDict } from '../../../Dependencies/Utils';
+import { fill } from 'lodash'
+import { sampleFromDistribution, argMax, DefaultDict, policyFnFactory } from '../../../Dependencies/Utils';
+import baseAgent from '../../baseAgent';
 
-export class QLearning{
-    constructor(env, params, callback){
+function greedyPolicyFn(state, qValues){
 
-        const _model = {
-            qValues: new DefaultDict(fill(Array(env.nA),0)),
+    const cStateQValues = qValues.get(state);
+    const nActions = cStateQValues.length;
+    const policy = fill(Array(nActions), 0);
+    const greedyAction = argMax(cStateQValues)
+    policy[greedyAction] = 1.0;
+    return policy;
+};
+
+export class QLearningAgent extends baseAgent{
+    /**
+     * 
+     * @param {qLearningArgs} config configuration for our agent.
+     */
+    constructor(config){
+        super(config)
+        this._env = config.env;
+        this._agentParams = {
+            qValues: new DefaultDict(fill(Array(this._env.nA),0)),
         }
-        const _discountFactor = params.discountFactor ?? 1.0;
-        const _learningRate = params.learningRate ?? 0.5;
-        const _targetPolicy = _greedyPolicyFn;
+        this._discountFactor = config.discountFactor ?? 1.0;
+        this._learningRate = config.learningRate ?? 0.5;
+        this._targetPolicy = config.targetPolicy ?? greedyPolicyFn;
+        this._behaviorPolicy =  config.behaviorPolicy?? policyFnFactory('random', config.env);
 
-        function _greedyPolicyFn(state){
-
-            const qValues = _model.qValues;
-            const policy = fill(Array(env.nA), 0);
-            const greedyAction = argMax(qValues.get(state))
-            policy[greedyAction] = 1.0;
-            return policy;
-        };
-
-        this.callback = callback || (()=>{});
-        this.getQValues = ()=>cloneDeep(_model.qValues);
-        this.save = ()=>JSON.stringify(_model);
-
-        /**
-         * 
-         * @param {number} nEpisodes how many episode should we allow our agent to run
-         * @param {function} behaviorPolicy our proposed policy from which we will choose our action
-         * 
-         * @returns {object} the model itself ( for function chaining)
-         */
-        this.run = async function(nEpisodes, behaviorPolicy){
-            for(let cEpisode = 0; cEpisode < nEpisodes; cEpisode++){
-
-                let state = env.reset();
-                let action = null;
-
-
-                while(true){
-                    // Take one step:
-                    const actionProbs = behaviorPolicy(state, this.getQValues());
-                    action = indexFromDistribution(actionProbs);
-                    const {observation: nextState, reward, isDone} = env.step(action);
-
-                    // select next Action
-                    const targetNextAction = indexFromDistribution(_targetPolicy(nextState));
-
-                    // TD Update
-                    const cActionValues = _model.qValues;
-                    const tdTarget = reward + _discountFactor * cActionValues.get(nextState)[targetNextAction];
-                    const tdDelta = tdTarget - cActionValues.get(state)[action];
-                    let newActionValues = cActionValues.get(state);
-                    newActionValues[action] += _learningRate * tdDelta;
-                    cActionValues.set(state, newActionValues);
-
-                    if (isDone)break;
-
-                    state = nextState;
-                }
-
-                // invoke the callback
-                const stopTheLoop = await this.callback() || false;
-
-                if(stopTheLoop)break;
-
-            }
-
-            return this;
-        }
-
-    
+        this.callback = config.callback || (()=>{});
     }
 
+
+    /**
+     * calculate and returns the action to select in a given state
+     * @override
+     * @param {Object} state current object
+     * @returns {Number} action index.
+     */
+    actionSelection(state){
+        const actionProbs = this._behaviorPolicy(state, this.getParams().qValues);
+        return sampleFromDistribution(actionProbs);
+    }
+
+    _tdUpdate(args){
+        const {state, action, targetNextAction, reward, nextState} = args;
+        const cActionValues = this._agentParams.qValues;
+        const tdTarget = reward + this._discountFactor * cActionValues.get(nextState)[targetNextAction];
+        const tdDelta = tdTarget - cActionValues.get(state)[action];
+        let newActionValues = cActionValues.get(state);
+        newActionValues[action] += this._learningRate * tdDelta;
+        if(state === undefined){
+            window.q = this.getParams().qValues;
+            throw new Error('the state must not be undefined')
+        }
+        cActionValues.set(state, newActionValues);
+    }
+
+    /**
+     * train our agent
+     * @override
+     * @param {number} nEpisodes how many episode should we allow our agent to run
+     * @returns {object} a promise which gives us the updated qValues
+     */
+    train(nEpisodes){
+        return (new Promise(async (resolve)=>{
+            for(let cEpisode = 0; cEpisode < nEpisodes; cEpisode++){
+                let state = this._env.reset();
+                while(true){
+                    const action = this.actionSelection(state)
+                    const { nextState, isDone, reward} = this._env.step(action);
+                    const targetNextAction = sampleFromDistribution(this._targetPolicy(nextState, this.getParams().qValues));
+                    this._tdUpdate({state, action, targetNextAction, reward, nextState});
+                    if (isDone)break;
+                    state = nextState;
+                }
+                const stopTheLoop = await this.callback() || false;
+                if(stopTheLoop)break;
+            }
+            resolve(this.getParams().qValues)
+        }))
+    }
 }
+
+/**
+ * @typedef {Object} qLearningArgs
+ * @property {Object} env environment on which our agent will get trained on.
+ * @property {Function} callback a callback function which will get invoked after the end of each episode.
+ * @property {number} discountFactor
+ * @property {number} learningRate
+ * @property {policyFn} behaviorPolicy behavior policy our agent should use
+ * @property {policyFn} targetPolicy which target policy should our agent should follow, if none specified then fallback to the greedy policy.
+ */
+
+ /**
+  * @callback policyFn given the state and current qValues this function calculates and return the policy to follow.
+  * @param {Object} state state of the environment
+  * @param {DefaultDict} qValues qValues of our agent
+  * @returns {Number[]} policy
+  */
