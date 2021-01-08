@@ -1,181 +1,142 @@
-import { cloneDeep } from 'lodash'
+import {argMax} from '../../Dependencies/Utils'
+import baseAgent from '../baseAgent';
 
-export class policyIteration{
-  constructor(env, params, callback){
+function greedyActionSelection(values){
+    let maxVal = Math.max(...values);
+    const maxValIndexArray = []
+    values.map((val,i)=>{
+    if(val === maxVal )maxValIndexArray.push(i)
+    })
 
-    const _nActions = env.nA;
-    const _nStates = env.nS;
-    const _model = {
-      valueFns: (Array(_nStates).fill(0)),
-      policy: (Array(_nStates).fill(0)).map(()=>Array(_nActions).fill(1/_nActions))
-    }
+    return maxValIndexArray;
+}
 
-    const _actionSelection = greedyActionSelection;
-    const _theta = params.theta || 0.2;
-    const _discountFactor = params.discountFactor || 0.1;
-
-    this.callback = callback ?? (()=>{})
-
-    function greedyActionSelection(values){
-      let maxVal = Math.max(...values);
-      const maxValIndexArray = []
-      values.map((val,i)=>{
-        if(val === maxVal )maxValIndexArray.push(i)
-      })
-
-      return maxValIndexArray;
-    }
-
+export class PolicyIterationAgent extends baseAgent{
 
     /**
-     *
-     * @param {Number} state current state
-     * @param {Array} valueFns value function array
-     * @summary calculate the action values of the given state.
-     * @return {Number} A vector of length _nActions containing the expected value of each action
+     * 
+     * @param {policyIterationArgs} config configuration for our agent.
      */
-    function _oneStepLookAhead(state, valueFns) {
-      const cAction = new Array(_nActions).fill(0);
-
-      for (let action = 0; action < _nActions; action += 1) {
-        const envTransitions = env.P[state][action];
-        const { reward } = envTransitions;
-        const transitionProb = envTransitions.probability;
-        const { nextStateIndex } = envTransitions;
-
-        cAction[action] +=
-          transitionProb *
-          (reward + _discountFactor * valueFns[nextStateIndex]);
-      }
-
-      return cAction;
+    constructor(config){
+        super(config);
+        this._agentParams = {
+            policy: (Array(this._env.nS).fill(0))
+                    .map(()=>Array(this._env.nA)
+                    .fill(1/this._env.nA)),
+            valueFns: (Array(this._env.nS).fill(0))
+        };
+        this._discountFactor = config.discountFactor;
     }
 
+    /**
+     * calculate and returns the action to select in a given state
+     * @override
+     * @param {Object} state current object
+     * @returns {Number} action index.
+     */
+    actionSelection(state){
+        return argMax(this.getParams().policy[state.id]);
+    }
 
-    this.getPolicy = ()=>cloneDeep(_model.policy);
-    this.getValueFns = ()=>cloneDeep(_model.valueFns);
-    this.save = ()=>JSON.stringify(_model);
+    _calcExpectedStateValue(state, valueFn){
+        const policy = this._agentParams.policy[state];
+        let expectedValue = 0;
 
-    this.policyEvaluation = function (policy, env, discountFactor, theta, nEpisodes, callback){ 
+        for(let action=0; action<policy.length; action+=1){
+            const actionProb = policy[action];
+            let {probability, nextState, reward, _} = this._env.P[state][action]
+            expectedValue += actionProb * probability * 
+                        (reward + this._discountFactor * valueFn[nextState]);
 
-      return new Promise(async resolve=>{
+        }
+        return expectedValue;
+    }
 
-        // init value Fns
-        const valueFns = new Array(_nStates).fill(0);
+    _policyEvalPerStep(valueFn){
+        const nStates = this._env.nS;
+        let maxValueEstimateDiff = 0;
 
-        for (let iter = 0; iter < nEpisodes; iter+=1) {
-          let delta = 0;//  stores the maximum rate of change between the current and prev estimates
+        // take full backup of each state.
+        for(let state = 0; state<nStates; state+=1){
+            const cStateExpectedValue = this._calcExpectedStateValue(state, valueFn);
+            const cValueEstimateDiff =  Math.abs(cStateExpectedValue - valueFn[state]);
 
-          for (let state = 0; state < _nStates; state += 1) {
-            let cValue = 0;
-            const cActions = policy[state];
+            maxValueEstimateDiff = Math.max(maxValueEstimateDiff, cValueEstimateDiff);
+            valueFn[state] = cStateExpectedValue;
+        }
+        return {maxValueEstimateDiff, valueFn};
+    }
 
-            // if this state is terminal state or a wall then don't continue.
-            if (env.P[state][0].nextStateIndex === null)break;
-
-            for (let action = 0; action < _nActions; action += 1) {
-              const envTransitions = env.P[state][action];
-              const { reward } = envTransitions;
-              const transitionProb = envTransitions.probability;
-              const { nextStateIndex } = envTransitions;
-              const actionProb = cActions[action];
-
-              // updating our value fns for current state's action
-              cValue +=
-                actionProb *
-                transitionProb *
-                (reward + discountFactor * valueFns[nextStateIndex]);
+    _policyEvaluation(steps, threshold = 0.00001){
+        return new Promise(async resolve =>{
+            let valueFn = new Array(this._env.nS).fill(0);
+            for(let iter = 0; iter<steps; iter+=1){
+                const {maxValueEstimateDiff, valueFn: newValueFn} = this._policyEvalPerStep(valueFn);
+                valueFn = newValueFn;
+                if(maxValueEstimateDiff < threshold)break;
             }
-
-            
-            delta = Math.max(delta, Math.abs(cValue - valueFns[state]));
-            valueFns[state] = cValue;
-          }
-          // updating our _model's valueFns after each iteration
-          _model.valueFns = valueFns;
-
-          // calling the callback function
-          if(callback)await callback();
-
-          // termination criterion
-          if (delta < theta) break;
-        }
-
-        // return the valueFns
-        resolve( valueFns );
-      });
-
-    }
-    this.policyImprovement = function(){
-      return new Promise( resolve=>{
-
-        // init policy stable flag
-        let isPolicyStable = false;
-
-        for (let state = 0; state < _nStates; state += 1) {
-          const selActions = _actionSelection(_model.policy[state]);
-
-          const actionValues = _oneStepLookAhead(state, _model.valueFns);
-          const bestActions = _actionSelection(actionValues);
-          const nBestActions = bestActions.length;
-
-          isPolicyStable = Math.min(...(selActions.map((val,i)=>{return (val === bestActions[i])})));
-
-          // greedily update the policy
-          _model.policy[state] = new Array(_nActions)
-            .fill(0)
-            .map((_, i) =>{
-              if(bestActions.indexOf(i) !== -1)return 1.0/nBestActions;
-              return 0;
-            } );
-        }
-
-        resolve(isPolicyStable);
-
-      })
-
+            this._agentParams.valueFns = valueFn;
+            resolve(valueFn);
+        })
     }
 
-    this.run = async (nEpisodes = 100)=>{
-      
-      // if the nEpisodes is an array then its assumed that the first entry is the max Iter of policy eval and other one is of policy improvement
-      // otherwise if its just a number then use that as a nEpisodes for both case.
-      const peMaxIter = nEpisodes[0] ?? nEpisodes;
-      const piMaxIter = nEpisodes[1] ?? nEpisodes;
+    _oneStepLookAhead(stateID, valueFn){
 
-      return new Promise(async (resolve)=>{
-
-
-        let iter = 0;
-        while (true) {
-          // evaluate the current Policy
-          _model.valueFns = await this.policyEvaluation(
-            _model.policy,
-            env,
-            _discountFactor,
-            _theta, 
-            peMaxIter,
-          );
-
-          // improving our policy
-          const isPolicyStable = await this.policyImprovement();
-
-          const terminate = await this.callback();
-
-          if (isPolicyStable){
-            return { policy: this.getPolicy(), valueFns: this.getValueFns() };
-          } 
-
-          if (iter > piMaxIter || terminate){
-            resolve();
-            return { policy: this.getPolicy(), valueFns: this.getValueFns() };
-          }
-          iter += 1;
+        const nActions = this._env.nA;
+        const cAction = new Array(nActions).fill(0);
+        for(let action = 0; action<nActions; action+=1){
+            const {nextState, reward, probability: transitionProb, _} = this._env.P[stateID][action];
+            cAction[action] += transitionProb * 
+                               (reward + this._discountFactor * valueFn[nextState]);
         }
-
-      })
-
+        return cAction;
     }
-  }
+    _policyImprovement(valueFn){
+        return new Promise( resolve => {
+            let isPolicyStable = true;
+            for(let stateID = 0; stateID < this._env.nS; stateID+=1){
+                const actionValues = this._oneStepLookAhead(stateID, valueFn);
+                const bestAction = argMax(actionValues);
+                const cState = {id: stateID};
+                const currentAction = this.actionSelection(cState);
+                if (currentAction !== bestAction)isPolicyStable = false;
+                // greedily update the policy
+                let targetPolicy = Array(this._env.nA).fill(0);
+                targetPolicy[bestAction] = 1.0;
+                this._agentParams.policy[stateID] = targetPolicy;
+            }
+            resolve(isPolicyStable);
+        })
+    }
+
+    /**
+     * train our agent.
+     * @override
+     * @param {number} nEpisodes number of episodes should our agent be trained for.
+     * @returns {Object} return the reference to this.
+     */
+    train(nEpisodes){
+        return new Promise(async (resolve) => {
+            let iter = 0;
+            const policyEvalSteps = 100 || nEpisodes;
+            while(iter < nEpisodes){
+                const valueFn = await this._policyEvaluation(policyEvalSteps);
+                const isPolicyStable = await this._policyImprovement(valueFn);
+                const terminateLoop =(this.callback)? await this.callback() : false;
+                if (isPolicyStable || terminateLoop)break;
+                iter += 1;
+            }
+            resolve(this);
+            }
+        )
+    }
+
 
 }
+
+/**
+ * @typedef {Object} policyIterationArgs
+ * @property {Object} env environment on which our agent will get trained on.
+ * @callback callback a callback function which will get invoked after the end of each episode.
+ * @property {number} discountFactor
+ */
