@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.com/MrityunjayBhardwaj/Reinforcement-Learning-in-JS.svg?branch=master)](https://travis-ci.com/MrityunjayBhardwaj/Reinforcement-Learning-in-JS)
+[![Build Status](https://travis-ci.com/MrityunjayBhardwaj/Reinforcement-Learning-in-JS.svg?branch=master)](https://travis-ci.com/MrityunjayBhardwaj/Reinforcement-Learning-in-JS?style=flat-square)
+
+![GitHub](https://img.shields.io/github/license/MrityunjayBhardwaj/Reinforcement-Learning-in-JS?style=flat-square)
 
 # (WIP) Reinforcement-Learning .....in JS ? 😱
 
