@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/MrityunjayBhardwaj/Reinforcement-Learning-in-JS.svg?branch=master)](https://travis-ci.com/MrityunjayBhardwaj/Reinforcement-Learning-in-JS) ![GitHub](https://img.shields.io/github/license/MrityunjayBhardwaj/Reinforcement-Learning-in-JS?style=flat)
 
-# (WIP) Reinforcement-Learning .....in JS ? 😱
+# (WIP) Reinforcement-Learning in JS 🤖 
 
 Hello everyone! 👋 🤗, so basically, the goal of this repo is to act as a learning companion as you go through the standard RL text: [Reinforcement Learning: An Introduction (2nd Edition)](http://incompleteideas.net/book/RLbook2020.pdf)
 
