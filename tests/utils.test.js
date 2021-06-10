@@ -1,6 +1,6 @@
 import * as utils from '../Dependencies/Utils'
 import { sum, min, max } from 'lodash';
-import { Env } from '../Environments/core';
+import { Env } from '../Yoga/core';
 
 test('testing argMax with Array of numbers of variable length', ()=>{
 
