@@ -2,7 +2,7 @@
 
 # (WIP) Yoga.js 🧘
 
-Yoga.js is a set of headless standardized environments to interface with RL Agents.
+Yoga.js is a set of standardized environments to interface with RL Agents.
 
 Yoga.js is heavily inspired by the OpenAI's Gym and Retro library and provides a similar interface and API. This means users familiar with these APIs can easily use Yoga.js
 
