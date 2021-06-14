@@ -1,7 +1,7 @@
 {
-  "name": "reinforcement-learning-in-js",
+  "name": "yoga.js",
   "version": "1.0.0",
-  "description": "implementation of several rl-algorithms",
+  "description": "A set of standardized environments to interface with RL Agents.",
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MrityunjayBhardwaj/Reinforcement-Learning-in-JS.git"
+    "url": "git+https://github.com/MrityunjayBhardwaj/Yoga.js.git"
   },
   "author": "Mrityunjay Bhardwaj",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MrityunjayBhardwaj/Reinforcement-Learning-in-JS/issues"
+    "url": "https://github.com/MrityunjayBhardwaj/Yoga.js/issues"
   },
-  "homepage": "https://github.com/MrityunjayBhardwaj/Reinforcement-Learning-in-JS#readme",
+  "homepage": "https://github.com/MrityunjayBhardwaj/Yoga.js#readme",
   "dependencies": {
     "file-saver": "^2.0.5",
     "lodash": "^4.17.20",
