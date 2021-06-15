@@ -2,22 +2,15 @@
 const path = require('path');
 const glob = require('glob');
 module.exports = {
-    entry: glob.sync("./Algorithms/**/app.js").reduce((acc, item) => {
-        const path = item.split("/");
-        path.pop();
-        const name = path.join('/');
-        acc[name] = item;
-        return acc;
-    }, {}),
+    entry:   "./Yoga/yoga.ts"  ,
     output: {
-        filename: "[name]/build/bundle.js",
-        path: path.resolve(__dirname, "")
+        filename: "bundle.js",
+        path: path.resolve(__dirname, 'dist')
     },
-
     module: {
         rules: [
             {
-                test: /\.m?js$/,
+                test: /\.ts$/,
                 exclude: /node_modules/,
                 use: {
                     loader: "babel-loader",
@@ -29,6 +22,9 @@ module.exports = {
             }
 
         ]
+    },
+    resolve: {
+        extensions: [".ts", ]
     },
     optimization: {
         minimize: true,
