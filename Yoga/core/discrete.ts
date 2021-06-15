@@ -1,6 +1,20 @@
 import {Env} from './core.js'
-import {sampleFromDistribution} from '../Dependencies/Utils'
-export class DiscreteEnv extends Env{
+import {sampleFromDistribution} from '../utils'
+
+interface probObj {
+    probability: number;
+    nextState: {id: number};
+    reward: number;
+    isDone: boolean;
+}
+
+export abstract class DiscreteEnv extends Env{
+    P: Array<Array<Array<probObj>>>;
+    nS: number;
+    nA: number;
+    initStateDist: Array<number>;
+    lastAction : number = -1;
+    s: number = -1;
     /**
      * 
      * @param {number} nS number of state
@@ -8,23 +22,25 @@ export class DiscreteEnv extends Env{
      * @param {array} P array of arrays where P[s][a] = [{probability, nextState, reward, isDone}, ...]
      * @param {array} initStateDist probability distribution of states used for initialization
      */
-    constructor(nS,nA,P, initStateDist){
-        super()
+    constructor(nS: number,nA: number,P: Array<Array<Array<probObj>>>, initStateDist: Array<number>){
+        super();
         this.P = P;
         this.initStateDist = initStateDist;
-        this.lastAction = null;
         this.nS = nS;
         this.nA = nA;
     }
     reset(){
         // sampling random state
         this.s = sampleFromDistribution(this.initStateDist);
-        this.lastAction = null;
-        return {id: this.s};
+        return {
+            nextState: {id: this.s},
+            reward: 3,
+            isDone: true,
+            info: null, 
+        }
     }
-    step(action){
+    step(action: number){
         let transitionStates = this.P[this.s][action];
-        if (!transitionStates.length)throw new Error("P[s][a] must be an array of atleast length 1 but given", transtionStates);
         const transitionProbs = transitionStates.map((a)=>a.probability);
         const sampleAction = sampleFromDistribution(transitionProbs);
         let {nextState, reward, isDone, probability} = transitionStates[sampleAction];
@@ -32,6 +48,7 @@ export class DiscreteEnv extends Env{
         this.s = nextState.id;
         this.lastAction = sampleAction;
 
-        return {nextState, reward, isDone, probability};
+        return {nextState, reward, isDone, info: probability};
     }
+
 }
