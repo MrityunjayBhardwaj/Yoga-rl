@@ -4,7 +4,7 @@ const glob = require('glob');
 module.exports = {
     entry:   "./Yoga/yoga.ts"  ,
     output: {
-        filename: "bundle.js",
+        filename: "yoga.js",
         path: path.resolve(__dirname, 'dist')
     },
     module: {
