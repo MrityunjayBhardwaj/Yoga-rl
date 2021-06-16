@@ -4,9 +4,10 @@
   "description": "A set of standardized environments to interface with RL Agents.",
   "main": "index.js",
   "scripts": {
+    "build": "npm run clean-dist && webpack",
+    "clean-dist": "rimraf dist/*",
     "test": "jest",
-    "serve": "http-server",
-    "build": "webpack"
+    "serve": "http-server"
   },
   "repository": {
     "type": "git",
@@ -41,7 +42,9 @@
     "ts-loader": "^9.2.3",
     "typescript": "^4.3.2",
     "webpack": "^5.2.0",
-    "webpack-cli": "^4.1.0"
+    "webpack-cli": "^4.1.0",
+    "webpack-dev-server": "^3.11.2",
+    "webpack-merge": "^5.8.0"
   },
   "jest": {
     "verbose": true
