@@ -1,21 +1,29 @@
-export class Env{
+export abstract class Env{
+    platform: string = 'web'
     /**
      * @summary this function resets the state of the environment
-     * @returns {stepObj}
+     * @returns {any} // TODO: change the any type to stepObj.
      */
-    reset(){throw new Error("this method is not yet Implemented")}
+    public abstract reset(): any;
 
     /**
      * @param {number} action action performed by the agent must be between 0 and nA.
      * @summary run 1 timestep of the environment.
      * @returns {stepObj}
      */
-    step(action){throw new Error("this method is not yet Implemented")}
+    public abstract step(action: number): stepObj;
 
     /**
      * @summary Renders the environment
      */
-    render(){throw new Error("this method is not yet Implemented")}
+    public abstract render(): void;
+}
+
+interface stepObj{
+    nextState: object,
+    reward: number,
+    isDone: boolean,
+    info: any// TODO: check how can we get rid of this any type maybe just use object type all the way?
 }
 
 /**

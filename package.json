@@ -4,9 +4,10 @@
   "description": "A set of standardized environments to interface with RL Agents.",
   "main": "index.js",
   "scripts": {
+    "build": "npm run clean-dist && webpack",
+    "clean-dist": "rimraf dist/*",
     "test": "jest",
-    "serve": "http-server",
-    "build": "webpack"
+    "serve": "http-server"
   },
   "repository": {
     "type": "git",
@@ -19,24 +20,30 @@
   },
   "homepage": "https://github.com/MrityunjayBhardwaj/Yoga.js#readme",
   "dependencies": {
+    "@types/lodash": "^4.14.170",
     "file-saver": "^2.0.5",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "lodash-es": "^4.17.15"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
     "@babel/plugin-proposal-class-properties": "^7.12.1",
+    "@babel/plugin-proposal-object-rest-spread": "^7.14.5",
     "@babel/plugin-proposal-private-methods": "^7.12.1",
     "@babel/plugin-transform-runtime": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
+    "@babel/preset-typescript": "^7.14.5",
     "babel-jest": "^26.6.3",
     "babel-loader": "^8.1.0",
     "glob": "^7.1.6",
     "http-server": "^0.12.3",
     "jest": "^26.6.3",
+    "ts-loader": "^9.2.3",
+    "typescript": "^4.3.2",
     "webpack": "^5.2.0",
-    "webpack-cli": "^4.1.0"
+    "webpack-cli": "^4.1.0",
+    "webpack-dev-server": "^3.11.2"
   },
   "jest": {
     "verbose": true

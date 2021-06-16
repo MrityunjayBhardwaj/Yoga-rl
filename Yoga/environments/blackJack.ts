@@ -1,30 +1,32 @@
 import { sum, sortBy } from 'lodash';
-import { Env } from './core';
+import { Env } from '../core/core';
+import {NotImplementedError} from '../utils'
 
-function cmp(a, b){
-    return ( a > b)*1 - (a < b)*1
+function cmp(a: number, b: number): number{
+    return (( a > b)? 1 : 0 )  - ((a < b)? 1 : 0)
 }
 
 // 1 = Ace, 2-10 = Number cards, Jack/Queen/King = 10
 const deck = new Array(10).fill(0).map((_,i)=>i+1)
 deck.push(...[10,10,10]);
 
-
 /**
- * drawing a card randomly and if drawHand === True then draw another card
+ * drawing a card randomly
  * @param {boolean} drawHand 
  * @return {Array}
  */
-function drawCard(drawHand = false){
+function drawCard(drawHand:boolean = false){
     const rndIndex = Math.floor(Math.random()*(deck.length));
-    let rndCards = deck[rndIndex];
+    return deck[rndIndex];
+}
 
-    if (drawHand){
-        const rndIndex = Math.floor(Math.random()*(deck.length));
-        rndCards = [rndCards, deck[rndIndex]];
-    }
-
-    return rndCards;
+/**
+ * drawing a 2 cards randomly  
+ * @param {boolean} drawHand 
+ * @return {Array}
+ */
+function drawHand(){
+    return [drawCard(), drawCard()];
 }
 
 /**
@@ -32,7 +34,7 @@ function drawCard(drawHand = false){
 * @param {Array} hand 
  * @return {boolean} 
  */
-function usableAce(hand){
+function usableAce(hand: Array<number>): boolean{
     // console.log(hand);
     return (hand.indexOf(1) !== -1) && ((sum(hand) + 10) <= 21)
 }
@@ -42,8 +44,8 @@ function usableAce(hand){
  * @param {Array} hand 
  * @return {number}
  */
-function sumHand(hand){
-    return sum(hand) + (usableAce(hand))*10;
+function sumHand(hand: Array<number>){
+    return sum(hand) + (usableAce(hand)? 1 : 0)*10;
 }
 
 /**
@@ -51,7 +53,7 @@ function sumHand(hand){
  * @param {Array} hand 
  * @returns {boolean}
  */
-function isBust(hand){
+function isBust(hand: Array<number>): boolean{
     return sumHand(hand) > 21
 }
 
@@ -60,7 +62,7 @@ function isBust(hand){
  * @param {Array} hand 
  * @return {number}
  */
-function score(hand){
+function score(hand: Array<number>): number{
     return (isBust(hand))? 0 : sumHand(hand);
 }
 
@@ -69,11 +71,16 @@ function score(hand){
  * @param {Array} hand 
  * @return {boolean}
  */
-function isNatural(hand){
+function isNatural(hand: Array<number>){
     return sortBy(hand) === [1, 10];
 }
 
 export class BlackJackEnv extends Env {
+    player: Array<number>;
+    dealer: Array<number>;
+    nA: number;
+    nautral: boolean;
+
     constructor (nautral = false) {
         super();
         this.player = [];
@@ -85,16 +92,21 @@ export class BlackJackEnv extends Env {
     }
 
     reset(){
-        this.dealer = drawCard(/* draw Hand */1);
-        this.player = drawCard(/* draw Hand */1);
+        this.dealer = drawHand();
+        this.player = drawHand();
 
         while(sumHand(this.player) < 12)
             this.player.push(drawCard());
 
-        return this._getObs();
+        return {nextState: this._getObs(), reward: 0, isDone: false, info: {dealer: this.dealer, player: this.player} }
     }
 
-    step(action){
+    /**
+     * 
+     * @param action Hit = 0 or Stand = 1
+     * @returns 
+     */
+    step(action: 1 | 0){
         let isDone = false;
         let reward = 0;
 
@@ -111,22 +123,26 @@ export class BlackJackEnv extends Env {
             }
         }
         else{
-            // stick!
             isDone = true;
             while(sumHand(this.dealer) < 17){
                 this.dealer.push(drawCard());
             }
-            reward = cmp(score(this.player), score(this.dealer)) ;
-            if(this.natural && isNatural(this.player) && reward === 1)
+            reward = cmp(score(this.player), score(this.dealer));
+            if(this.nautral && isNatural(this.player) && reward === 1)
                 reward = 1.5;
 
         }
-            return {nextState: this._getObs(), reward, isDone, cardUsed: {dealer: this.dealer, player: this.player} }
+            return {nextState: this._getObs(), reward, isDone, info: {dealer: this.dealer, player: this.player} }
 
     }
     
     _getObs(){
         return { playerScore: sumHand(this.player), dealerScore: this.dealer[0], usableAce: usableAce(this.player) }
+    }
+
+    render(){
+        throw NotImplementedError
+
     }
 
 

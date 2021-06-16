@@ -1,4 +1,4 @@
-import * as envRegister from '../Yoga/envRegister';
+import * as envRegister from '../Yoga/yoga';
 
 function createListOfEnvs(){
     const list = [];
