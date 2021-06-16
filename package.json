@@ -1,8 +1,12 @@
 {
-  "name": "yoga.js",
-  "version": "1.0.0",
+  "name": "yoga-rl",
+  "version": "0.0.1",
   "description": "A set of standardized environments to interface with RL Agents.",
-  "main": "index.js",
+  "main": "dist/yoga.js",
+  "types":"dist/yoga.d.ts",
+  "files": [
+    "/dist"
+  ],
   "scripts": {
     "build": "npm run clean-dist && webpack",
     "clean-dist": "rimraf dist/*",
