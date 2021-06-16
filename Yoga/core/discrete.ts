@@ -1,4 +1,4 @@
-import {Env} from './core.js'
+import {Env} from './core'
 import {sampleFromDistribution} from '../utils'
 
 interface probObj {

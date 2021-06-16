@@ -1,12 +1,12 @@
-import {DiscreteEnv} from '../core/discrete.js'
-import { NotImplementedError } from '../utils.js';
+import {DiscreteEnv} from '../core/discrete'
+import { NotImplementedError } from '../utils';
 // Inspired by Frozen Lake Env : https://github.com/openai/gym/blob/master/gym/envs/toytext/frozenlake.py
 
 export class GridWorldEnv extends DiscreteEnv{
   constructor(
-    gridShape = [5, 5], 
-    isWallState: (idx: number)=> boolean, 
-    isTerminalState: (idx: number, nS: number) =>boolean,  // TODO: remove nS from here.
+    gridShape: Array<number> = [5, 5], 
+    isWallState: (idx: number) => boolean, 
+    isTerminalState: (idx: number, nS: number) => boolean,  // TODO: remove nS from here.
     rewardFn:(idx: number, nS: number) => number, 
     initStartState: () => number = ()=> 3){
 
