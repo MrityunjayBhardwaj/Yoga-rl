@@ -1,8 +1,7 @@
 export abstract class Env{
-    platform: string = 'web'
     /**
      * @summary this function resets the state of the environment
-     * @returns {any} // TODO: change the any type to stepObj.
+     * @returns {stepObj} 
      */
     public abstract reset(): any;
 
@@ -23,7 +22,7 @@ interface stepObj{
     nextState: object,
     reward: number,
     isDone: boolean,
-    info: any// TODO: check how can we get rid of this any type maybe just use object type all the way?
+    info: object
 }
 
 /**
