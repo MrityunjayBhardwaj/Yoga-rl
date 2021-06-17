@@ -36,7 +36,7 @@ export abstract class DiscreteEnv extends Env{
             nextState: {id: this.s},
             reward: 3,
             isDone: true,
-            info: null, 
+            info: {}, 
         }
     }
     step(action: number){
@@ -48,7 +48,7 @@ export abstract class DiscreteEnv extends Env{
         this.s = nextState.id;
         this.lastAction = sampleAction;
 
-        return {nextState, reward, isDone, info: probability};
+        return {nextState, reward, isDone, info: {probability}};
     }
 
 }
