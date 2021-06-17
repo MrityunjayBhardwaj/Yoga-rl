@@ -6,7 +6,7 @@ export class GridWorldEnv extends DiscreteEnv{
   constructor(
     gridShape: Array<number> = [5, 5], 
     isWallState: (idx: number) => boolean, 
-    isTerminalState: (idx: number, nS: number) => boolean,  // TODO: remove nS from here.
+    isTerminalState: (idx: number, nS: number) => boolean,
     rewardFn:(idx: number, nS: number) => number, 
     initStartState: () => number = ()=> 3){
 
