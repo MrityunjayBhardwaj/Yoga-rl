@@ -25,7 +25,8 @@
   "homepage": "https://github.com/MrityunjayBhardwaj/Yoga-rl#readme",
   "dependencies": {
     "@types/lodash": "^4.14.170",
-    "lodash-es": "^4.17.15"
+    "lodash-es": "^4.17.15",
+    "seedrandom": "^3.0.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",
