@@ -1,6 +1,6 @@
 {
   "name": "yoga-rl",
-  "version": "0.0.1",
+  "version": "0.0.16",
   "description": "A set of standardized environments to interface with RL Agents.",
   "main": "dist/yoga.js",
   "types": "dist/yoga.d.ts",
@@ -15,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MrityunjayBhardwaj/Yoga.js.git"
+    "url": "git+https://github.com/MrityunjayBhardwaj/Yoga-rl.git"
   },
   "author": "mrityunjay",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MrityunjayBhardwaj/Yoga.js/issues"
+    "url": "https://github.com/MrityunjayBhardwaj/Yoga-rl/issues"
   },
-  "homepage": "https://github.com/MrityunjayBhardwaj/Yoga.js#readme",
+  "homepage": "https://github.com/MrityunjayBhardwaj/Yoga-rl#readme",
   "dependencies": {
     "@types/lodash": "^4.14.170",
     "lodash-es": "^4.17.15"
